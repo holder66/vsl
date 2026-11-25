@@ -47,11 +47,29 @@ pub fn (p Plot) show(config PlotConfig) ! {
 		t := spawn server.listen_and_serve()
 		server.wait_till_running()!
 		url := 'http://${server.addr}'
+		// if config.open_browser {
+		// 	os.open_uri(url) or { println('Could not open a browser: ${err}. Open ${url} to view the plot.') }
+		// } else {
+		// 	println('Open ${url} to view the plot.')
+		// }
 		if config.open_browser {
-			os.open_uri(url) or { println('Could not open a browser: ${err}. Open ${url} to view the plot.') }
+			$if macos {
+				mut browser := os.new_process('/usr/bin/open')
+				browser.set_args(['-a', 'Firefox', url])
+				browser.run()
+				browser.wait()
+				if browser.code != 0 {
+					println('Could not open Firefox. Open ${url} to view the plot.')
+				}
+			} $else {
+				os.open_uri(url) or {
+					println('Could not open a browser: ${err}. Open ${url} to view the plot.')
+				}
+			}
 		} else {
 			println('Open ${url} to view the plot.')
 		}
+
 		t.wait()
 	}
 }
